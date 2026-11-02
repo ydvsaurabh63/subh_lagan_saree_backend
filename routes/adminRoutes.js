@@ -9,3 +9,4 @@ router.use(protect, adminOnly);
 router.get('/stats', getAdminStats);
 
 export default router;
+
