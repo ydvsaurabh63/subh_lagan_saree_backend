@@ -48,21 +48,21 @@ const categoriesData = [
     name: 'Chiffon Sarees',
     slug: 'chiffon-sarees',
     description: 'Feather-light, gracefully flowing drapes with delicate embellishments for evening glamour.',
-    image: 'https://images.unsplash.com/photo-1610030469668-9655519803b0?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
     status: 'active',
   },
   {
     name: 'Georgette Sarees',
     slug: 'georgette-sarees',
     description: 'Contemporary textured drapes featuring chikankari, mirror work, and gota patti borders.',
-    image: 'https://images.unsplash.com/photo-1610030469884-25e2270912f2?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=800&q=80',
     status: 'active',
   },
   {
     name: 'Organza Sarees',
     slug: 'organza-sarees',
     description: 'Sheer, crisp, pastel floral and scalloped-border artisanal sarees for festive celebrations.',
-    image: 'https://images.unsplash.com/photo-1609357605051-bd6b7588e1aa?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
     status: 'active',
   },
   {
@@ -286,8 +286,8 @@ const seedData = async () => {
         description: 'Ethereal sheer blush pink organza saree decorated with hand-painted pastel blossoms and fine silver pita work scallop borders. Airy, weightless, and modern.',
         category: catMap['organza-sarees'],
         images: [
-          'https://images.unsplash.com/photo-1609357605051-bd6b7588e1aa?auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1610030469668-9655519803b0?auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80'
         ],
         price: 11999,
         discountPrice: 9499,
@@ -312,7 +312,7 @@ const seedData = async () => {
         category: catMap['designer-sarees'],
         images: [
           'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1610030469884-25e2270912f2?auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80'
         ],
         price: 13999,
         discountPrice: 10999,
@@ -336,8 +336,8 @@ const seedData = async () => {
         description: 'Authentic Rajasthani hand-dyed leheriya drape in coral peach and vermillion tones. Crafted from pure 60-gram chiffon with gota patti handwork along the edges.',
         category: catMap['chiffon-sarees'],
         images: [
-          'https://images.unsplash.com/photo-1610030469668-9655519803b0?auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1609357605051-bd6b7588e1aa?auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=1000&q=80'
         ],
         price: 8999,
         discountPrice: 6999,
@@ -361,8 +361,8 @@ const seedData = async () => {
         description: 'Lucknowi artisanal delicacy brought to life with intricate bakhiya and phanda stitches on fluid georgette, highlighted with subtle mukaish silver dots.',
         category: catMap['georgette-sarees'],
         images: [
-          'https://images.unsplash.com/photo-1610030469884-25e2270912f2?auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80'
         ],
         price: 15499,
         discountPrice: 12499,
