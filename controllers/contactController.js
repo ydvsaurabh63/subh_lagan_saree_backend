@@ -48,3 +48,73 @@ export const submitContactMessage = async (req, res, next) => {
   }
 };
 
+// @desc    Get all contact messages (Admin)
+// @route   GET /api/contact/admin/all
+// @access  Private/Admin
+export const getAllContacts = async (req, res, next) => {
+  try {
+    const contacts = await Contact.find().sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      count: contacts.length,
+      contacts,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update contact enquiry status (Admin)
+// @route   PUT /api/contact/admin/:id/status
+// @access  Private/Admin
+export const updateContactStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ['new', 'read', 'responded'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+      });
+    }
+
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) {
+      return res.status(404).json({ success: false, message: 'Enquiry message not found' });
+    }
+
+    contact.status = status;
+    await contact.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Enquiry marked as ${status}`,
+      contact,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete contact enquiry (Admin)
+// @route   DELETE /api/contact/admin/:id
+// @access  Private/Admin
+export const deleteContact = async (req, res, next) => {
+  try {
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) {
+      return res.status(404).json({ success: false, message: 'Enquiry not found' });
+    }
+
+    await Contact.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Enquiry deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+

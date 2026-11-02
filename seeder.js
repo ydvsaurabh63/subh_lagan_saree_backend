@@ -9,6 +9,8 @@ import Cart from './models/Cart.js';
 import Wishlist from './models/Wishlist.js';
 import Order from './models/Order.js';
 import Review from './models/Review.js';
+import Contact from './models/Contact.js';
+import Newsletter from './models/Newsletter.js';
 
 dotenv.config();
 await connectDB();
@@ -110,6 +112,8 @@ const seedData = async () => {
     await Wishlist.deleteMany();
     await Order.deleteMany();
     await Review.deleteMany();
+    await Contact.deleteMany();
+    await Newsletter.deleteMany();
 
     console.log('Seeding categories...');
     const createdCategories = await Category.insertMany(categoriesData);
@@ -118,12 +122,13 @@ const seedData = async () => {
       catMap[cat.slug] = cat._id;
     });
 
-    console.log('Seeding demo user...');
+    console.log('Seeding demo users (Customer & Admin)...');
     const demoUser = await User.create({
       name: 'Priya Sharma',
       email: 'customer@subhlagansarees.com',
       phone: '+91 98765 43210',
       password: 'password123',
+      role: 'customer',
       addresses: [
         {
           fullName: 'Priya Sharma',
@@ -136,6 +141,14 @@ const seedData = async () => {
           isDefault: true,
         }
       ]
+    });
+
+    const adminUser = await User.create({
+      name: 'Boutique Owner (Admin)',
+      email: 'admin@subhlagansarees.com',
+      phone: '+91 98765 00000',
+      password: 'admin123',
+      role: 'admin',
     });
 
     console.log('Seeding saree products...');
@@ -454,8 +467,171 @@ const seedData = async () => {
       comment: 'The Banarasi silk quality is breathtaking! The zari shines with authentic antique gold elegance. Wore it to my brother wedding and received countless compliments.',
     });
 
+    console.log('Seeding sample orders for admin dashboard demonstration...');
+    // Order 1: Placed
+    await Order.create({
+      orderNumber: 'SLS-202611-1001',
+      user: demoUser._id,
+      customerDetails: {
+        name: 'Priya Sharma',
+        email: 'customer@subhlagansarees.com',
+        phone: '+91 98765 43210',
+      },
+      shippingAddress: {
+        houseNo: 'Flat 402, Royal Residency',
+        street: 'Civil Lines Road, Near City Mall',
+        city: 'Jaipur',
+        state: 'Rajasthan',
+        pincode: '302001',
+        orderNotes: 'Please deliver after 2 PM if possible',
+      },
+      items: [
+        {
+          product: createdProducts[0]._id,
+          name: createdProducts[0].name,
+          image: createdProducts[0].images[0],
+          price: createdProducts[0].discountPrice,
+          quantity: 1,
+        }
+      ],
+      subtotal: createdProducts[0].discountPrice,
+      shippingCharges: 0,
+      totalAmount: createdProducts[0].discountPrice,
+      paymentMethod: 'COD',
+      paymentStatus: 'Pending',
+      orderStatus: 'Placed',
+    });
+
+    // Order 2: Processing
+    await Order.create({
+      orderNumber: 'SLS-202611-1002',
+      user: demoUser._id,
+      customerDetails: {
+        name: 'Ananya Deshmukh',
+        email: 'ananya.d@gmail.com',
+        phone: '+91 98201 11223',
+      },
+      shippingAddress: {
+        houseNo: 'Bungalow 18, Shanti Vihar',
+        street: 'Prabhat Road, Deccan',
+        city: 'Pune',
+        state: 'Maharashtra',
+        pincode: '411004',
+        orderNotes: 'Urgent wedding requirement',
+      },
+      items: [
+        {
+          product: createdProducts[1]._id,
+          name: createdProducts[1].name,
+          image: createdProducts[1].images[0],
+          price: createdProducts[1].discountPrice,
+          quantity: 1,
+        }
+      ],
+      subtotal: createdProducts[1].discountPrice,
+      shippingCharges: 0,
+      totalAmount: createdProducts[1].discountPrice,
+      paymentMethod: 'COD',
+      paymentStatus: 'Pending',
+      orderStatus: 'Processing',
+    });
+
+    // Order 3: Shipped
+    await Order.create({
+      orderNumber: 'SLS-202611-1003',
+      user: demoUser._id,
+      customerDetails: {
+        name: 'Ritu Sen',
+        email: 'ritu.sen@rediffmail.com',
+        phone: '+91 97112 88443',
+      },
+      shippingAddress: {
+        houseNo: 'Plot 45, Salt Lake Sector 3',
+        street: 'Near City Centre',
+        city: 'Kolkata',
+        state: 'West Bengal',
+        pincode: '700098',
+        orderNotes: 'Call before dispatch',
+      },
+      items: [
+        {
+          product: createdProducts[2]._id,
+          name: createdProducts[2].name,
+          image: createdProducts[2].images[0],
+          price: createdProducts[2].discountPrice,
+          quantity: 1,
+        }
+      ],
+      subtotal: createdProducts[2].discountPrice,
+      shippingCharges: 0,
+      totalAmount: createdProducts[2].discountPrice,
+      paymentMethod: 'COD',
+      paymentStatus: 'Pending',
+      orderStatus: 'Shipped',
+    });
+
+    // Order 4: Delivered (Paid)
+    await Order.create({
+      orderNumber: 'SLS-202611-1004',
+      user: demoUser._id,
+      customerDetails: {
+        name: 'Kavita Iyer',
+        email: 'kavita.iyer@outlook.com',
+        phone: '+91 94440 55667',
+      },
+      shippingAddress: {
+        houseNo: 'Villa 7, Palm Meadows',
+        street: 'Whitefield Main Road',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        pincode: '560066',
+        orderNotes: '',
+      },
+      items: [
+        {
+          product: createdProducts[4]._id,
+          name: createdProducts[4].name,
+          image: createdProducts[4].images[0],
+          price: createdProducts[4].discountPrice,
+          quantity: 1,
+        }
+      ],
+      subtotal: createdProducts[4].discountPrice,
+      shippingCharges: 0,
+      totalAmount: createdProducts[4].discountPrice,
+      paymentMethod: 'COD',
+      paymentStatus: 'Paid',
+      orderStatus: 'Delivered',
+    });
+
+    console.log('Seeding customer enquiries & leads...');
+    await Contact.create({
+      name: 'Anita Verma',
+      email: 'anita.verma@gmail.com',
+      phone: '+91 98112 33445',
+      subject: 'Custom Bridal Blouse & Fall Piko Service',
+      message: 'Hello, I want to purchase the Royal Crimson Banarasi Katan Silk Saree for my upcoming wedding. Can you arrange custom padding and maggam embroidery on the blouse fabric?',
+      status: 'new',
+    });
+
+    await Contact.create({
+      name: 'Meera Chawla',
+      email: 'meera.chawla@yahoo.co.in',
+      phone: '+91 99234 56789',
+      subject: 'Bulk Wedding Order for 12 Bridesmaids',
+      message: 'We are planning 12 matching organza pastel sarees for our destination wedding in Udaipur. Do you offer custom color coordination and bulk packing?',
+      status: 'read',
+    });
+
+    console.log('Seeding newsletter subscriptions...');
+    await Newsletter.create({ email: 'sangeeta.kapoor@gmail.com' });
+    await Newsletter.create({ email: 'rohit.mehta@heritagecrafts.in' });
+
     console.log('Data seeded successfully!');
-    console.log(`Demo login: customer@subhlagansarees.com / password123`);
+    console.log('=============================================');
+    console.log('Customer Login: customer@subhlagansarees.com / password123');
+    console.log('Admin Dashboard: admin@subhlagansarees.com / admin123');
+    console.log('=============================================');
     process.exit(0);
   } catch (error) {
     console.error('Error seeding data:', error);

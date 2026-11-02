@@ -32,3 +32,20 @@ export const subscribeNewsletter = async (req, res, next) => {
   }
 };
 
+// @desc    Get all newsletter subscribers (Admin)
+// @route   GET /api/newsletter/admin/all
+// @access  Private/Admin
+export const getAllSubscribers = async (req, res, next) => {
+  try {
+    const subscribers = await Newsletter.find().sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      count: subscribers.length,
+      subscribers,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+

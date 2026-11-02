@@ -252,3 +252,112 @@ export const cancelOrder = async (req, res, next) => {
   }
 };
 
+// @desc    Get all orders (Admin)
+// @route   GET /api/orders/admin/all
+// @access  Private/Admin
+export const getAllOrdersAdmin = async (req, res, next) => {
+  try {
+    const { status, search, page = 1, limit = 50 } = req.query;
+    const query = {};
+
+    if (status && status !== 'all') {
+      query.orderStatus = status;
+    }
+
+    if (search && search.trim() !== '') {
+      const term = search.trim();
+      query.$or = [
+        { orderNumber: { $regex: term, $options: 'i' } },
+        { 'customerDetails.name': { $regex: term, $options: 'i' } },
+        { 'customerDetails.phone': { $regex: term, $options: 'i' } },
+        { 'customerDetails.email': { $regex: term, $options: 'i' } },
+        { 'shippingAddress.city': { $regex: term, $options: 'i' } },
+      ];
+    }
+
+    const pageNumber = Math.max(1, parseInt(page, 10));
+    const pageSize = Math.max(1, parseInt(limit, 10));
+    const skip = (pageNumber - 1) * pageSize;
+
+    const total = await Order.countDocuments(query);
+    const orders = await Order.find(query)
+      .populate('user', 'name email phone')
+      .populate('items.product', 'name images sku')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(pageSize);
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      total,
+      orders,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update order status (Admin)
+// @route   PUT /api/orders/admin/:id/status
+// @access  Private/Admin
+export const updateOrderStatusAdmin = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ['Placed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+      });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    order.orderStatus = status;
+
+    // For Cash on Delivery, when Delivered, mark payment as Paid
+    if (status === 'Delivered') {
+      order.paymentStatus = 'Paid';
+    } else if (status === 'Cancelled') {
+      order.paymentStatus = 'Cancelled';
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Order status updated to ${status}`,
+      order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete order (Admin)
+// @route   DELETE /api/orders/admin/:id
+// @access  Private/Admin
+export const deleteOrderAdmin = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    await Order.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Order record deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+

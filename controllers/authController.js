@@ -34,6 +34,7 @@ export const register = async (req, res, next) => {
         email: user.email,
         phone: user.phone,
         profileImage: user.profileImage,
+        role: user.role,
       },
       token: generateToken(user._id),
     });
@@ -72,6 +73,7 @@ export const login = async (req, res, next) => {
         email: user.email,
         phone: user.phone,
         profileImage: user.profileImage,
+        role: user.role,
       },
       token: generateToken(user._id),
     });

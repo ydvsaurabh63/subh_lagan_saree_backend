@@ -196,3 +196,166 @@ export const getFilterOptions = async (req, res, next) => {
   }
 };
 
+// @desc    Create new product (Admin)
+// @route   POST /api/products
+// @access  Private/Admin
+export const createProduct = async (req, res, next) => {
+  try {
+    const {
+      name,
+      sku,
+      description,
+      category,
+      images,
+      price,
+      discountPrice,
+      fabric,
+      color,
+      sareeLength,
+      blouseDetails,
+      occasion,
+      stock,
+      isFeatured,
+      isBestSeller,
+      isNewArrival,
+      isBridal,
+    } = req.body;
+
+    if (!name || !price || !category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product name, price, and category are required',
+      });
+    }
+
+    // Auto-generate slug
+    const cleanSlug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    const uniqueSlug = `${cleanSlug}-${Date.now().toString().slice(-4)}`;
+
+    // Fallback SKU if not given
+    const generatedSku = sku || `SLS-${Date.now().toString().slice(-6)}`;
+
+    // Ensure images array has at least default placeholder if empty
+    const productImages = Array.isArray(images) && images.length > 0 
+      ? images 
+      : ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80'];
+
+    const product = await Product.create({
+      name,
+      slug: uniqueSlug,
+      sku: generatedSku,
+      description: description || 'Handcrafted luxury saree from Subh Lagan Sarees.',
+      category,
+      images: productImages,
+      price: Number(price),
+      discountPrice: discountPrice ? Number(discountPrice) : Number(price),
+      fabric: fabric || 'Pure Silk',
+      color: color || 'Maroon',
+      sareeLength: sareeLength || '5.5 Meters',
+      blouseDetails: blouseDetails || '0.8 Meters Unstitched Blouse Piece',
+      occasion: occasion || 'Wedding',
+      stock: stock !== undefined ? Number(stock) : 10,
+      isFeatured: Boolean(isFeatured),
+      isBestSeller: Boolean(isBestSeller),
+      isNewArrival: isNewArrival !== undefined ? Boolean(isNewArrival) : true,
+      isBridal: Boolean(isBridal),
+    });
+
+    const populated = await Product.findById(product._id).populate('category', 'name slug');
+
+    res.status(201).json({
+      success: true,
+      message: 'Saree product created successfully',
+      product: populated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update product (Admin)
+// @route   PUT /api/products/:id
+// @access  Private/Admin
+export const updateProduct = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    const {
+      name,
+      sku,
+      description,
+      category,
+      images,
+      price,
+      discountPrice,
+      fabric,
+      color,
+      sareeLength,
+      blouseDetails,
+      occasion,
+      stock,
+      isFeatured,
+      isBestSeller,
+      isNewArrival,
+      isBridal,
+    } = req.body;
+
+    if (name) product.name = name;
+    if (sku) product.sku = sku;
+    if (description !== undefined) product.description = description;
+    if (category) product.category = category;
+    if (images && Array.isArray(images) && images.length > 0) product.images = images;
+    if (price !== undefined) product.price = Number(price);
+    if (discountPrice !== undefined) product.discountPrice = Number(discountPrice);
+    if (fabric) product.fabric = fabric;
+    if (color) product.color = color;
+    if (sareeLength) product.sareeLength = sareeLength;
+    if (blouseDetails) product.blouseDetails = blouseDetails;
+    if (occasion) product.occasion = occasion;
+    if (stock !== undefined) product.stock = Number(stock);
+    if (isFeatured !== undefined) product.isFeatured = Boolean(isFeatured);
+    if (isBestSeller !== undefined) product.isBestSeller = Boolean(isBestSeller);
+    if (isNewArrival !== undefined) product.isNewArrival = Boolean(isNewArrival);
+    if (isBridal !== undefined) product.isBridal = Boolean(isBridal);
+
+    await product.save();
+    const updated = await Product.findById(product._id).populate('category', 'name slug');
+
+    res.status(200).json({
+      success: true,
+      message: 'Saree product updated successfully',
+      product: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete product (Admin)
+// @route   DELETE /api/products/:id
+// @access  Private/Admin
+export const deleteProduct = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    await Product.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Saree product removed from catalog successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
