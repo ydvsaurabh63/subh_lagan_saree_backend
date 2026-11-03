@@ -6,7 +6,7 @@ import fs from 'fs';
 import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
 
-import connectDB from './config/db.js';
+import connectDB, { getLastDbError, autoReconnectMiddleware } from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 // Route imports
@@ -60,6 +60,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(autoReconnectMiddleware);
 
 // Static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -70,7 +71,12 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: isDbConnected ? 'OK' : 'DEGRADED',
     database: isDbConnected ? 'connected' : 'disconnected',
-    message: 'Subh Lagan Sarees API is running smoothly',
+    hasMongoUri: Boolean(process.env.MONGO_URI),
+    hasCloudinary: Boolean(process.env.CLOUDINARY_API_KEY),
+    dbError: isDbConnected ? null : getLastDbError(),
+    message: isDbConnected
+      ? 'Subh Lagan Sarees API is connected to MongoDB Atlas and ready.'
+      : 'API is running but waiting for MongoDB Atlas connection. Please verify MONGO_URI in Render Secret Files and Atlas IP Whitelist (0.0.0.0/0).',
     timestamp: new Date().toISOString()
   });
 });
