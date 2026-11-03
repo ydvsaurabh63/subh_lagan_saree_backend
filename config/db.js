@@ -8,15 +8,22 @@ try {
   // Ignore fallback if restricted
 }
 
+const ATLAS_PRODUCTION_URI =
+  'mongodb+srv://diintechteam4_db_user:UJXPKfzqbkpQh6qU@cluster0.hhhir9p.mongodb.net/subh_lagan_sarees?appName=Cluster0';
+
+export const getCleanMongoUri = () => {
+  let uri = process.env.MONGO_URI;
+  // If undefined or pointing to local loopback (which fails on Render), automatically route to MongoDB Atlas
+  if (!uri || uri.includes('localhost') || uri.includes('127.0.0.1')) {
+    return ATLAS_PRODUCTION_URI;
+  }
+  return uri;
+};
+
 let lastDbError = null;
 
 const connectDB = async () => {
-  const uri = process.env.MONGO_URI;
-  if (!uri) {
-    lastDbError = 'process.env.MONGO_URI is undefined. Add it in Render Secret Files (.env) or Environment Variables.';
-    console.error(`CRITICAL: ${lastDbError}`);
-    return;
-  }
+  const uri = getCleanMongoUri();
 
   try {
     const conn = await mongoose.connect(uri, {
@@ -35,9 +42,10 @@ const connectDB = async () => {
 export const getLastDbError = () => lastDbError;
 
 export const autoReconnectMiddleware = async (req, res, next) => {
-  if (mongoose.connection.readyState !== 1 && process.env.MONGO_URI) {
+  if (mongoose.connection.readyState !== 1) {
     try {
-      await mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 });
+      const uri = getCleanMongoUri();
+      await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
       lastDbError = null;
     } catch (e) {
       lastDbError = e.message;
