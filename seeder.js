@@ -13,6 +13,9 @@ import Contact from './models/Contact.js';
 import Newsletter from './models/Newsletter.js';
 
 dotenv.config();
+if (!process.env.MONGO_URI) {
+  dotenv.config({ path: './backend/.env' });
+}
 await connectDB();
 
 const categoriesData = [
