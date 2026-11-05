@@ -58,7 +58,7 @@ const categoriesData = [
     name: 'Georgette Sarees',
     slug: 'georgette-sarees',
     description: 'Contemporary textured drapes featuring chikankari, mirror work, and gota patti borders.',
-    image: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1618901185975-d59f7091bcfe?auto=format&fit=crop&w=800&q=80',
     status: 'active',
   },
   {
@@ -72,14 +72,14 @@ const categoriesData = [
     name: 'Designer Sarees',
     slug: 'designer-sarees',
     description: 'Modern silhouettes, pre-draped luxury, and sequins artistry for red-carpet moments.',
-    image: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
     status: 'active',
   },
   {
     name: 'Bridal Sarees',
     slug: 'bridal-sarees',
     description: 'Opulent heirloom bridal sarees woven in sacred red, maroon, and auspicious gold.',
-    image: 'https://images.unsplash.com/photo-1546804784-896d0dca3805?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
     status: 'active',
   },
   {
@@ -165,7 +165,7 @@ const seedData = async () => {
         images: [
           'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
           'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1546804784-896d0dca3805?auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1610030469668-8e9f641aaf27?auto=format&fit=crop&w=1000&q=80'
         ],
         price: 24999,
         discountPrice: 19999,
@@ -239,8 +239,8 @@ const seedData = async () => {
         description: 'The epitome of wedding splendor. Tailored in sumptuous crimson red silk with hand-embossed zardozi, dabka, resham threadwork, and cutdana borders designed for the quintessential Subh Lagan bride.',
         category: catMap['bridal-sarees'],
         images: [
-          'https://images.unsplash.com/photo-1546804784-896d0dca3805?auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1610030469668-8e9f641aaf27?auto=format&fit=crop&w=1000&q=80'
         ],
         price: 45000,
         discountPrice: 38999,
@@ -314,7 +314,7 @@ const seedData = async () => {
         description: 'Shimmer under the evening lights in this designer pure Viscose Georgette saree adorned with midnight blue tone-on-tone micro-sequins and metallic piping.',
         category: catMap['designer-sarees'],
         images: [
-          'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1618901185975-d59f7091bcfe?auto=format&fit=crop&w=1000&q=80',
           'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80'
         ],
         price: 13999,
@@ -364,7 +364,7 @@ const seedData = async () => {
         description: 'Lucknowi artisanal delicacy brought to life with intricate bakhiya and phanda stitches on fluid georgette, highlighted with subtle mukaish silver dots.',
         category: catMap['georgette-sarees'],
         images: [
-          'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=1000&q=80',
           'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80'
         ],
         price: 15499,
@@ -390,7 +390,7 @@ const seedData = async () => {
         category: catMap['party-wear-sarees'],
         images: [
           'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1546804784-896d0dca3805?auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1610030469668-8e9f641aaf27?auto=format&fit=crop&w=1000&q=80'
         ],
         price: 16999,
         discountPrice: 13499,
