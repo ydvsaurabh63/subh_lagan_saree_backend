@@ -147,7 +147,7 @@ const seedData = async () => {
     });
 
     const adminUser = await User.create({
-      name: 'Boutique Owner (Admin)',
+      name: 'Boutique Owner (Client)',
       email: 'admin@subhlagansarees.com',
       phone: '+91 98765 00000',
       password: 'admin123',
