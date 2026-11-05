@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
 
 import connectDB, { getLastDbError, autoReconnectMiddleware } from './config/db.js';
+import { initDefaultUsers } from './utils/initRoles.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 // Route imports
@@ -21,6 +22,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import newsletterRoutes from './routes/newsletterRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import managementRoutes from './routes/managementRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,8 +37,10 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 dotenv.config();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB and initialize default roles
+connectDB().then(() => {
+  initDefaultUsers();
+});
 
 const app = express();
 
@@ -93,6 +97,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/management', managementRoutes);
 app.use('/api/upload', uploadRoutes);
 
 // Error Handling Middlewares

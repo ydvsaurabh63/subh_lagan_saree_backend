@@ -52,8 +52,26 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['customer', 'admin'],
+    enum: ['customer', 'client', 'admin', 'superadmin'],
     default: 'customer'
+  },
+  storeName: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  assignedAdmin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  credits: {
+    type: Number,
+    default: 100
+  },
+  notes: {
+    type: String,
+    default: ''
   },
   resetPasswordOTP: {
     type: String

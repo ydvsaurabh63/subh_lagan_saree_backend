@@ -34,14 +34,38 @@ export const protect = async (req, res, next) => {
   }
 };
 
-// Admin Authorization Middleware
+// Admin Authorization Middleware (allows client, admin, and superadmin for store management)
 export const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+  if (req.user && ['admin', 'superadmin', 'client'].includes(req.user.role)) {
     next();
   } else {
     return res.status(403).json({
       success: false,
-      message: 'Access denied: Admin authorization required',
+      message: 'Access denied: Admin or Client authorization required',
+    });
+  }
+};
+
+// Superadmin Only Middleware
+export const superAdminOnly = (req, res, next) => {
+  if (req.user && req.user.role === 'superadmin') {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied: Superadmin authorization required',
+    });
+  }
+};
+
+// Admin or Superadmin Middleware
+export const adminOrSuperAdminOnly = (req, res, next) => {
+  if (req.user && ['superadmin', 'admin'].includes(req.user.role)) {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied: Admin or Superadmin authorization required',
     });
   }
 };
