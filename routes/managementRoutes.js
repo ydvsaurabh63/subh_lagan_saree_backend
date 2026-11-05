@@ -42,3 +42,4 @@ router.delete('/clients/:id', adminOrSuperAdminOnly, deleteClient);
 router.put('/users/:id/toggle-status', adminOrSuperAdminOnly, toggleUserStatus);
 
 export default router;
+

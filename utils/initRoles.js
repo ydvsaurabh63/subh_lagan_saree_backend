@@ -55,3 +55,4 @@ export const initDefaultUsers = async () => {
     console.error('Warning in initDefaultUsers:', err.message);
   }
 };
+
