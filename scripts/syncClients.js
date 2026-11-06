@@ -59,3 +59,4 @@ syncClients().catch((err) => {
   console.error('Error syncing clients:', err);
   process.exit(1);
 });
+

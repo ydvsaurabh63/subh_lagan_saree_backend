@@ -3,6 +3,7 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Store from '../models/Store.js';
 import mongoose from 'mongoose';
+import generateToken from '../utils/generateToken.js';
 
 // =========================================================================
 // SUPERADMIN & ADMIN STATS CONTROLLERS
@@ -532,6 +533,47 @@ export const toggleUserStatus = async (req, res, next) => {
       success: true,
       message: `Account status updated to ${userToToggle.accountStatus}`,
       accountStatus: userToToggle.accountStatus,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Impersonate / direct login to user account (superadmin/admin can directly login to client)
+// @route   POST /api/management/impersonate/:id
+// @access  Private (Superadmin & Admin)
+export const impersonateUser = async (req, res, next) => {
+  try {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: 'User account not found' });
+    }
+
+    if (targetUser.accountStatus === 'suspended') {
+      return res.status(400).json({ success: false, message: 'Cannot direct login to a suspended account' });
+    }
+
+    // Role safety: Admin cannot impersonate Super Admin
+    if (req.user.role === 'admin' && targetUser.role === 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Access denied: Admin cannot impersonate Super Admin' });
+    }
+
+    const token = generateToken(targetUser._id);
+
+    res.status(200).json({
+      success: true,
+      message: `Direct login to ${targetUser.storeName || targetUser.name} successful`,
+      token,
+      user: {
+        _id: targetUser._id,
+        name: targetUser.name,
+        email: targetUser.email,
+        phone: targetUser.phone,
+        role: targetUser.role,
+        storeName: targetUser.storeName,
+        accountStatus: targetUser.accountStatus,
+        credits: targetUser.credits,
+      },
     });
   } catch (error) {
     next(error);

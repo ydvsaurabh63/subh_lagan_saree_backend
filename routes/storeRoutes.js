@@ -22,3 +22,4 @@ router.put('/:id', protect, adminOrSuperAdminOnly, updateStore);
 router.delete('/:id', protect, superAdminOnly, deleteStore);
 
 export default router;
+

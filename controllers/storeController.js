@@ -270,3 +270,4 @@ export const deleteStore = async (req, res, next) => {
     next(error);
   }
 };
+

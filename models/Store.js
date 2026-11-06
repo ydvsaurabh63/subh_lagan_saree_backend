@@ -77,3 +77,4 @@ const storeSchema = new mongoose.Schema(
 );
 
 export default mongoose.model('Store', storeSchema);
+

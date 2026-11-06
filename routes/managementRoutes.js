@@ -11,6 +11,7 @@ import {
   updateClient,
   deleteClient,
   toggleUserStatus,
+  impersonateUser,
 } from '../controllers/managementController.js';
 import { protect, superAdminOnly, adminOrSuperAdminOnly } from '../middleware/authMiddleware.js';
 
@@ -40,6 +41,7 @@ router.put('/clients/:id', adminOrSuperAdminOnly, updateClient);
 router.delete('/clients/:id', adminOrSuperAdminOnly, deleteClient);
 
 router.put('/users/:id/toggle-status', adminOrSuperAdminOnly, toggleUserStatus);
+router.post('/impersonate/:id', adminOrSuperAdminOnly, impersonateUser);
 
 export default router;
 
