@@ -96,7 +96,24 @@ const productSchema = new mongoose.Schema({
   numReviews: {
     type: Number,
     default: 0,
-  }
+  },
+  storeSlug: {
+    type: String,
+    default: 'subh-lagan',
+    trim: true,
+    lowercase: true,
+    index: true,
+  },
+  storeName: {
+    type: String,
+    default: 'Subh Lagan Sarees',
+    trim: true,
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
 }, {
   timestamps: true
 });

@@ -12,12 +12,17 @@ export const submitContactMessage = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please provide all required fields' });
     }
 
+    const activeStoreSlug = (req.body.storeSlug || req.headers['x-store-slug'] || 'subh-lagan').toLowerCase().trim();
+    const activeStoreName = req.body.storeName || (activeStoreSlug === 'arun-vastralay' ? 'Arun Vastralay' : activeStoreSlug === 'veeraj-brand-seller' ? 'Veeraj Brand Seller' : 'Subh Lagan Sarees');
+
     const contact = await Contact.create({
       name,
       email,
       phone: phone || '',
       subject,
       message,
+      storeSlug: activeStoreSlug,
+      storeName: activeStoreName,
     });
 
     // Optional email notification to admin
@@ -53,7 +58,17 @@ export const submitContactMessage = async (req, res, next) => {
 // @access  Private/Admin
 export const getAllContacts = async (req, res, next) => {
   try {
-    const contacts = await Contact.find().sort({ createdAt: -1 });
+    const query = {};
+
+    // Store isolation for clients
+    if (req.user && (req.user.role === 'client' || (req.user.role === 'admin' && req.user.storeName))) {
+      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      query.storeSlug = userStoreSlug;
+    } else if (req.query.store && req.query.store !== 'all') {
+      query.storeSlug = req.query.store.toLowerCase().trim();
+    }
+
+    const contacts = await Contact.find(query).sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       count: contacts.length,
@@ -83,6 +98,14 @@ export const updateContactStatus = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Enquiry message not found' });
     }
 
+    // Role check: client can only modify enquiries from their store
+    if (req.user && req.user.role === 'client' && req.user.storeName) {
+      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      if (contact.storeSlug && contact.storeSlug !== userStoreSlug) {
+        return res.status(403).json({ success: false, message: 'Not authorized to manage another store\'s enquiry' });
+      }
+    }
+
     contact.status = status;
     await contact.save();
 
@@ -104,6 +127,14 @@ export const deleteContact = async (req, res, next) => {
     const contact = await Contact.findById(req.params.id);
     if (!contact) {
       return res.status(404).json({ success: false, message: 'Enquiry not found' });
+    }
+
+    // Role check: client can only delete enquiries from their store
+    if (req.user && req.user.role === 'client' && req.user.storeName) {
+      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      if (contact.storeSlug && contact.storeSlug !== userStoreSlug) {
+        return res.status(403).json({ success: false, message: 'Not authorized to delete another store\'s enquiry' });
+      }
     }
 
     await Contact.findByIdAndDelete(req.params.id);

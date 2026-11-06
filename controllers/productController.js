@@ -25,6 +25,20 @@ export const getProducts = async (req, res, next) => {
 
     const query = {};
 
+    // Store-specific Isolation
+    const activeStoreSlug = (req.query.store || req.headers['x-store-slug'] || '').toLowerCase().trim();
+    if (activeStoreSlug && activeStoreSlug !== 'all') {
+      if (activeStoreSlug === 'subh-lagan') {
+        query.$or = [
+          { storeSlug: 'subh-lagan' },
+          { storeSlug: null },
+          { storeSlug: { $exists: false } },
+        ];
+      } else {
+        query.storeSlug = activeStoreSlug;
+      }
+    }
+
     // 1. Keyword Search (Name, Description, Fabric, Color)
     if (search && search.trim() !== '') {
       query.$or = [
@@ -243,6 +257,18 @@ export const createProduct = async (req, res, next) => {
       ? images 
       : ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80'];
 
+    // Determine store context for product
+    let targetStoreSlug = 'subh-lagan';
+    let targetStoreName = 'Subh Lagan Sarees';
+
+    if (req.user && (req.user.role === 'client' || (req.user.role === 'admin' && req.user.storeName))) {
+      targetStoreName = req.user.storeName;
+      targetStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+    } else if (req.body.storeSlug) {
+      targetStoreSlug = req.body.storeSlug.toLowerCase().trim();
+      targetStoreName = req.body.storeName || targetStoreSlug;
+    }
+
     const product = await Product.create({
       name,
       slug: uniqueSlug,
@@ -262,6 +288,9 @@ export const createProduct = async (req, res, next) => {
       isBestSeller: Boolean(isBestSeller),
       isNewArrival: isNewArrival !== undefined ? Boolean(isNewArrival) : true,
       isBridal: Boolean(isBridal),
+      storeSlug: targetStoreSlug,
+      storeName: targetStoreName,
+      createdBy: req.user?._id || null,
     });
 
     const populated = await Product.findById(product._id).populate('category', 'name slug');
@@ -284,6 +313,14 @@ export const updateProduct = async (req, res, next) => {
     const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    // Role check: client can only modify products from their own store
+    if (req.user && req.user.role === 'client' && req.user.storeName) {
+      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      if (product.storeSlug && product.storeSlug !== userStoreSlug) {
+        return res.status(403).json({ success: false, message: 'You can only update your own boutique sarees' });
+      }
     }
 
     const {
@@ -345,6 +382,14 @@ export const deleteProduct = async (req, res, next) => {
     const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    // Role check: client can only delete products from their own store
+    if (req.user && req.user.role === 'client' && req.user.storeName) {
+      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      if (product.storeSlug && product.storeSlug !== userStoreSlug) {
+        return res.status(403).json({ success: false, message: 'You can only delete your own boutique sarees' });
+      }
     }
 
     await Product.findByIdAndDelete(req.params.id);

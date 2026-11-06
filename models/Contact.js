@@ -31,7 +31,19 @@ const contactSchema = new mongoose.Schema({
     type: String,
     enum: ['new', 'read', 'responded'],
     default: 'new',
-  }
+  },
+  storeSlug: {
+    type: String,
+    default: 'subh-lagan',
+    trim: true,
+    lowercase: true,
+    index: true,
+  },
+  storeName: {
+    type: String,
+    default: 'Subh Lagan Sarees',
+    trim: true,
+  },
 }, {
   timestamps: true
 });

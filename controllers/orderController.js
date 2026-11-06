@@ -70,6 +70,9 @@ export const createOrder = async (req, res, next) => {
     const totalAmount = subtotal + shippingCharges;
     const orderNumber = generateOrderNumber();
 
+    const activeStoreSlug = (req.body.storeSlug || req.headers['x-store-slug'] || 'subh-lagan').toLowerCase().trim();
+    const activeStoreName = req.body.storeName || (activeStoreSlug === 'arun-vastralay' ? 'Arun Vastralay' : activeStoreSlug === 'veeraj-brand-seller' ? 'Veeraj Brand Seller' : 'Subh Lagan Sarees');
+
     const order = await Order.create({
       orderNumber,
       user: req.user._id,
@@ -93,6 +96,8 @@ export const createOrder = async (req, res, next) => {
       paymentMethod: 'COD',
       paymentStatus: 'Pending',
       orderStatus: 'Placed',
+      storeSlug: activeStoreSlug,
+      storeName: activeStoreName,
     });
 
     // Clear user's cart in database
@@ -204,6 +209,14 @@ export const getOrderById = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
+    // Role check: client can only manage orders from their store
+    if (req.user && req.user.role === 'client' && req.user.storeName) {
+      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      if (order.storeSlug && order.storeSlug !== userStoreSlug) {
+        return res.status(403).json({ success: false, message: 'You can only manage orders placed on your store' });
+      }
+    }
+
     // Verify ownership
     if (order.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to view this order' });
@@ -226,6 +239,14 @@ export const cancelOrder = async (req, res, next) => {
     const order = await Order.findById(req.params.id);
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Role check: client can only manage orders from their store
+    if (req.user && req.user.role === 'client' && req.user.storeName) {
+      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      if (order.storeSlug && order.storeSlug !== userStoreSlug) {
+        return res.status(403).json({ success: false, message: 'You can only manage orders placed on your store' });
+      }
     }
 
     if (order.user.toString() !== req.user._id.toString()) {
@@ -257,8 +278,16 @@ export const cancelOrder = async (req, res, next) => {
 // @access  Private/Admin
 export const getAllOrdersAdmin = async (req, res, next) => {
   try {
-    const { status, search, page = 1, limit = 50 } = req.query;
+    const { status, search, store, page = 1, limit = 50 } = req.query;
     const query = {};
+
+    // Store isolation for clients
+    if (req.user && (req.user.role === 'client' || (req.user.role === 'admin' && req.user.storeName))) {
+      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      query.storeSlug = userStoreSlug;
+    } else if (store && store !== 'all') {
+      query.storeSlug = store.toLowerCase().trim();
+    }
 
     if (status && status !== 'all') {
       query.orderStatus = status;
@@ -318,6 +347,14 @@ export const updateOrderStatusAdmin = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
+    // Role check: client can only manage orders from their store
+    if (req.user && req.user.role === 'client' && req.user.storeName) {
+      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      if (order.storeSlug && order.storeSlug !== userStoreSlug) {
+        return res.status(403).json({ success: false, message: 'You can only manage orders placed on your store' });
+      }
+    }
+
     order.orderStatus = status;
 
     // For Cash on Delivery, when Delivered, mark payment as Paid
@@ -347,6 +384,14 @@ export const deleteOrderAdmin = async (req, res, next) => {
     const order = await Order.findById(req.params.id);
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Role check: client can only manage orders from their store
+    if (req.user && req.user.role === 'client' && req.user.storeName) {
+      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      if (order.storeSlug && order.storeSlug !== userStoreSlug) {
+        return res.status(403).json({ success: false, message: 'You can only manage orders placed on your store' });
+      }
     }
 
     await Order.findByIdAndDelete(req.params.id);

@@ -68,7 +68,19 @@ const orderSchema = new mongoose.Schema({
   },
   deliveredAt: {
     type: Date,
-  }
+  },
+  storeSlug: {
+    type: String,
+    default: 'subh-lagan',
+    trim: true,
+    lowercase: true,
+    index: true,
+  },
+  storeName: {
+    type: String,
+    default: 'Subh Lagan Sarees',
+    trim: true,
+  },
 }, {
   timestamps: true
 });
