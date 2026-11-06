@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import Store from '../models/Store.js';
 import mongoose from 'mongoose';
 
 // =========================================================================
@@ -383,6 +384,25 @@ export const createClient = async (req, res, next) => {
       notes,
     });
 
+    // Sync store record
+    if (storeName) {
+      const storeSlug = storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      await Store.findOneAndUpdate(
+        { user: newClient._id },
+        {
+          name: storeName.trim(),
+          slug: storeSlug,
+          ownerName: name.trim(),
+          ownerEmail: email.toLowerCase().trim(),
+          phone: phone || '',
+          whatsapp: phone || '+91 81475 40362',
+          status: accountStatus === 'active' ? 'active' : 'inactive',
+          user: newClient._id,
+        },
+        { upsert: true, new: true }
+      );
+    }
+
     const populatedClient = await User.findById(newClient._id)
       .select('-password')
       .populate('assignedAdmin', 'name email');
@@ -432,6 +452,25 @@ export const updateClient = async (req, res, next) => {
     }
 
     await client.save();
+
+    // Sync store record
+    if (client.storeName) {
+      const storeSlug = client.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      await Store.findOneAndUpdate(
+        { user: client._id },
+        {
+          name: client.storeName.trim(),
+          slug: storeSlug,
+          ownerName: client.name,
+          ownerEmail: client.email,
+          phone: client.phone || '',
+          whatsapp: client.phone || '+91 81475 40362',
+          status: client.accountStatus === 'active' ? 'active' : 'inactive',
+          user: client._id,
+        },
+        { upsert: true, new: true }
+      );
+    }
 
     const populatedClient = await User.findById(client._id)
       .select('-password')

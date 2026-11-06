@@ -24,6 +24,8 @@ import newsletterRoutes from './routes/newsletterRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import managementRoutes from './routes/managementRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import storeRoutes from './routes/storeRoutes.js';
+import { seedDefaultStores } from './controllers/storeController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,9 +39,10 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 dotenv.config();
 
-// Connect to MongoDB and initialize default roles
-connectDB().then(() => {
-  initDefaultUsers();
+// Connect to MongoDB and initialize default roles and stores
+connectDB().then(async () => {
+  await initDefaultUsers();
+  await seedDefaultStores();
 });
 
 const app = express();
@@ -99,6 +102,7 @@ app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/management', managementRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/stores', storeRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);
