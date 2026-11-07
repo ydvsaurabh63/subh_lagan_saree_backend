@@ -298,3 +298,4 @@ async function seedMultiIndustryStores() {
 }
 
 seedMultiIndustryStores();
+
