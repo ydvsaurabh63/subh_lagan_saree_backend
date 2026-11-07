@@ -24,30 +24,41 @@ export const getProducts = async (req, res, next) => {
     } = req.query;
 
     const query = {};
+    const andConditions = [];
 
     // Store-specific Isolation
-    const activeStoreSlug = (req.query.store || req.headers['x-store-slug'] || '').toLowerCase().trim();
-    if (activeStoreSlug && activeStoreSlug !== 'all') {
+    const rawStoreSlug = (req.query.storeSlug || req.query.store || req.headers['x-store-slug'] || '').toLowerCase().trim();
+    const activeStoreSlug = (!rawStoreSlug || rawStoreSlug === 'default') ? 'subh-lagan' : rawStoreSlug;
+
+    if (activeStoreSlug !== 'all') {
       if (activeStoreSlug === 'subh-lagan') {
-        query.$or = [
-          { storeSlug: 'subh-lagan' },
-          { storeSlug: null },
-          { storeSlug: { $exists: false } },
-        ];
+        andConditions.push({
+          $or: [
+            { storeSlug: 'subh-lagan' },
+            { storeSlug: null },
+            { storeSlug: { $exists: false } },
+          ],
+        });
       } else {
-        query.storeSlug = activeStoreSlug;
+        andConditions.push({ storeSlug: activeStoreSlug });
       }
     }
 
     // 1. Keyword Search (Name, Description, Fabric, Color)
     if (search && search.trim() !== '') {
-      query.$or = [
-        { name: { $regex: search.trim(), $options: 'i' } },
-        { description: { $regex: search.trim(), $options: 'i' } },
-        { fabric: { $regex: search.trim(), $options: 'i' } },
-        { color: { $regex: search.trim(), $options: 'i' } },
-        { occasion: { $regex: search.trim(), $options: 'i' } },
-      ];
+      andConditions.push({
+        $or: [
+          { name: { $regex: search.trim(), $options: 'i' } },
+          { description: { $regex: search.trim(), $options: 'i' } },
+          { fabric: { $regex: search.trim(), $options: 'i' } },
+          { color: { $regex: search.trim(), $options: 'i' } },
+          { occasion: { $regex: search.trim(), $options: 'i' } },
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      query.$and = andConditions;
     }
 
     // 2. Category Filter (by slug or ObjectId)
@@ -164,8 +175,14 @@ export const getRelatedProducts = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
+    const storeSlug = product.storeSlug || 'subh-lagan';
+    const storeCondition = storeSlug === 'subh-lagan'
+      ? { $or: [{ storeSlug: 'subh-lagan' }, { storeSlug: null }, { storeSlug: { $exists: false } }] }
+      : { storeSlug };
+
     const related = await Product.find({
       _id: { $ne: product._id },
+      ...storeCondition,
       $or: [
         { category: product.category },
         { fabric: product.fabric },
