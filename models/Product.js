@@ -44,26 +44,40 @@ const productSchema = new mongoose.Schema({
   },
   fabric: {
     type: String,
-    required: [true, 'Please specify fabric (e.g. Pure Silk, Banarasi Silk, Georgette, Organza)'],
+    default: '',
     trim: true,
   },
   color: {
     type: String,
-    required: [true, 'Please specify color (e.g. Royal Maroon, Rani Pink, Mustard Gold, Emerald Green)'],
+    default: '',
     trim: true,
   },
   sareeLength: {
     type: String,
-    default: '5.5 Meters',
+    default: '',
   },
   blouseDetails: {
     type: String,
-    default: '0.8 Meters Unstitched Matching Blouse Piece Included',
+    default: '',
   },
   occasion: {
     type: String,
-    required: [true, 'Please specify occasion (e.g. Bridal, Wedding, Festive, Party Wear, Traditional)'],
+    default: 'General',
     trim: true,
+  },
+  storeType: {
+    type: String,
+    enum: ['saree', 'jewellery', 'hair', 'general'],
+    default: 'saree',
+  },
+  material: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  specifications: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {},
   },
   stock: {
     type: Number,
