@@ -205,12 +205,33 @@ export const getRelatedProducts = async (req, res, next) => {
 // @access  Public
 export const getFilterOptions = async (req, res, next) => {
   try {
-    const fabrics = await Product.distinct('fabric');
-    const colors = await Product.distinct('color');
-    const occasions = await Product.distinct('occasion');
-    
-    const minProduct = await Product.findOne().sort({ price: 1 }).select('price');
-    const maxProduct = await Product.findOne().sort({ price: -1 }).select('price');
+    const rawStoreSlug = (req.query.storeSlug || req.query.store || req.headers['x-store-slug'] || '').toLowerCase().trim();
+    const activeStoreSlug = (!rawStoreSlug || rawStoreSlug === 'default') ? 'subh-lagan' : rawStoreSlug;
+
+    const filterQuery = {};
+    if (activeStoreSlug !== 'all') {
+      if (activeStoreSlug === 'subh-lagan') {
+        filterQuery.$or = [
+          { storeSlug: 'subh-lagan' },
+          { storeSlug: null },
+          { storeSlug: { $exists: false } },
+        ];
+      } else {
+        filterQuery.storeSlug = activeStoreSlug;
+      }
+    }
+
+    let fabrics = await Product.distinct('fabric', filterQuery);
+    let colors = await Product.distinct('color', filterQuery);
+    let occasions = await Product.distinct('occasion', filterQuery);
+
+    // Filter out blank/null values
+    fabrics = fabrics.filter((f) => f && typeof f === 'string' && f.trim() !== '');
+    colors = colors.filter((c) => c && typeof c === 'string' && c.trim() !== '');
+    occasions = occasions.filter((o) => o && typeof o === 'string' && o.trim() !== '');
+
+    const minProduct = await Product.findOne(filterQuery).sort({ price: 1 }).select('price');
+    const maxProduct = await Product.findOne(filterQuery).sort({ price: -1 }).select('price');
 
     res.status(200).json({
       success: true,

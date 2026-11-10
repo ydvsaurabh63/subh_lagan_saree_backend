@@ -117,6 +117,10 @@ const storeSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    homeBanners: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
     badge: {
       type: String,
       default: 'Verified Boutique Partner',

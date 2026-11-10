@@ -279,6 +279,7 @@ export const createStore = async (req, res, next) => {
       promoDiscount = '',
       trustBadge = '',
       instagramHandle = '',
+      homeBanners = {},
     } = req.body;
 
     if (!name) {
@@ -326,6 +327,7 @@ export const createStore = async (req, res, next) => {
       promoDiscount,
       trustBadge,
       instagramHandle,
+      homeBanners,
     });
 
     res.status(201).json({
@@ -376,6 +378,7 @@ export const updateStore = async (req, res, next) => {
       promoDiscount,
       trustBadge,
       instagramHandle,
+      homeBanners,
     } = req.body;
 
     if (name) store.name = name.trim();
@@ -415,6 +418,7 @@ export const updateStore = async (req, res, next) => {
     if (promoDiscount !== undefined) store.promoDiscount = promoDiscount;
     if (trustBadge !== undefined) store.trustBadge = trustBadge;
     if (instagramHandle !== undefined) store.instagramHandle = instagramHandle;
+    if (homeBanners !== undefined) store.homeBanners = homeBanners;
 
     if (isDefault) {
       await Store.updateMany({ _id: { $ne: store._id } }, { $set: { isDefault: false } });
