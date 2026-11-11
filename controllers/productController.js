@@ -31,10 +31,13 @@ export const getProducts = async (req, res, next) => {
     const activeStoreSlug = (!rawStoreSlug || rawStoreSlug === 'default') ? 'subh-lagan' : rawStoreSlug;
 
     if (activeStoreSlug !== 'all') {
-      if (activeStoreSlug === 'subh-lagan') {
+      if (activeStoreSlug === 'subh-lagan' || activeStoreSlug.includes('subh-lagan')) {
         andConditions.push({
           $or: [
             { storeSlug: 'subh-lagan' },
+            { storeSlug: 'subh-lagan-sarees-flagship' },
+            { storeSlug: 'subh-lagan-sarees' },
+            { storeSlug: { $regex: /^subh-lagan/i } },
             { storeSlug: null },
             { storeSlug: { $exists: false } },
           ],
@@ -210,9 +213,12 @@ export const getFilterOptions = async (req, res, next) => {
 
     const filterQuery = {};
     if (activeStoreSlug !== 'all') {
-      if (activeStoreSlug === 'subh-lagan') {
+      if (activeStoreSlug === 'subh-lagan' || activeStoreSlug.includes('subh-lagan')) {
         filterQuery.$or = [
           { storeSlug: 'subh-lagan' },
+          { storeSlug: 'subh-lagan-sarees-flagship' },
+          { storeSlug: 'subh-lagan-sarees' },
+          { storeSlug: { $regex: /^subh-lagan/i } },
           { storeSlug: null },
           { storeSlug: { $exists: false } },
         ];
