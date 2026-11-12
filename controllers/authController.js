@@ -71,15 +71,25 @@ export const sendMobileOTP = async (req, res, next) => {
     }
 
     // Search user by mobile number (matching last 10 digits)
-    const user = await User.findOne({
+    let user = await User.findOne({
       phone: { $regex: cleanPhone }
     });
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        isNewUser: true,
-        message: `No account registered with +91 ${cleanPhone}. Please Sign Up first!`
+      // Auto-create customer account on the fly for frictionless OTP login
+      let candidateEmail = `customer${cleanPhone}@subhlagansarees.com`;
+      const existingEmail = await User.findOne({ email: candidateEmail });
+      if (existingEmail) {
+        candidateEmail = `customer${cleanPhone}_${Date.now()}@subhlagansarees.com`;
+      }
+
+      user = await User.create({
+        name: `Customer (${cleanPhone.slice(-4)})`,
+        email: candidateEmail,
+        phone: `+91 ${cleanPhone}`,
+        password: `OtpPass@${Math.floor(100000 + Math.random() * 900000)}`,
+        role: 'customer',
+        accountStatus: 'active',
       });
     }
 
