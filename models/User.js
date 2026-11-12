@@ -73,6 +73,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  loginOTP: {
+    type: String
+  },
+  loginOTPExpires: {
+    type: Date
+  },
   resetPasswordOTP: {
     type: String
   },

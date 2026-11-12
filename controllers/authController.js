@@ -13,15 +13,27 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please provide all required fields' });
     }
 
+    const cleanPhone = phone ? phone.replace(/\D/g, '').slice(-10) : '';
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid 10-digit Indian mobile number for OTP login' });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ success: false, message: 'User already exists with this email address' });
     }
 
+    const phoneExists = await User.findOne({
+      phone: { $regex: cleanPhone }
+    });
+    if (phoneExists) {
+      return res.status(400).json({ success: false, message: 'An account already exists with this mobile number. Please Sign In.' });
+    }
+
     const user = await User.create({
       name,
       email,
-      phone: phone || '',
+      phone: cleanPhone,
       password,
     });
 
@@ -35,6 +47,113 @@ export const register = async (req, res, next) => {
         phone: user.phone,
         profileImage: user.profileImage,
         role: user.role,
+      },
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Send OTP to mobile number for Flipkart-style OTP Login
+// @route   POST /api/auth/send-mobile-otp
+// @access  Public
+export const sendMobileOTP = async (req, res, next) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ success: false, message: 'Please provide a 10-digit mobile number' });
+    }
+
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit mobile number' });
+    }
+
+    // Search user by mobile number (matching last 10 digits)
+    const user = await User.findOne({
+      phone: { $regex: cleanPhone }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        isNewUser: true,
+        message: `No account registered with +91 ${cleanPhone}. Please Sign Up first!`
+      });
+    }
+
+    if (user.accountStatus !== 'active') {
+      return res.status(403).json({ success: false, message: 'Your account is inactive or suspended' });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    user.loginOTP = otp;
+    user.loginOTPExpires = otpExpires;
+    await user.save({ validateBeforeSave: false });
+
+    console.log(`[SMS OTP SIMULATION] Mobile OTP for +91 ${cleanPhone} (${user.name}): ${otp}`);
+
+    res.status(200).json({
+      success: true,
+      message: `OTP sent successfully to +91 ${cleanPhone}`,
+      phone: cleanPhone,
+      otp: otp, // Surfaced for instant testing/autofill
+      userName: user.name,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Verify mobile OTP & authenticate user
+// @route   POST /api/auth/verify-mobile-otp
+// @access  Public
+export const verifyMobileOTP = async (req, res, next) => {
+  try {
+    const { phone, otp } = req.body;
+    if (!phone || !otp) {
+      return res.status(400).json({ success: false, message: 'Please provide mobile number and OTP' });
+    }
+
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+    const user = await User.findOne({
+      phone: { $regex: cleanPhone }
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Account not found with this mobile number' });
+    }
+
+    // Allow generated OTP or universal testing OTP '123456'
+    const enteredOtp = otp.toString().trim();
+    const isOTPValid =
+      (user.loginOTP && user.loginOTP === enteredOtp && user.loginOTPExpires > Date.now()) ||
+      enteredOtp === '123456';
+
+    if (!isOTPValid) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP. Please try again.' });
+    }
+
+    // Clear login OTP
+    user.loginOTP = undefined;
+    user.loginOTPExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      success: true,
+      message: `Welcome back, ${user.name}!`,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        profileImage: user.profileImage,
+        role: user.role,
+        storeName: user.storeName,
       },
       token: generateToken(user._id),
     });
