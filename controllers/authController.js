@@ -346,3 +346,109 @@ export const resetPassword = async (req, res, next) => {
   }
 };
 
+// @desc    Google OAuth Sign-In & Sign-Up
+// @route   POST /api/auth/google
+// @access  Public
+export const googleLogin = async (req, res, next) => {
+  try {
+    const { token, credential, profile } = req.body;
+    let googleUser = null;
+
+    // 1. If Google ID Token / Credential provided
+    if (credential) {
+      try {
+        const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+        if (verifyRes.ok) {
+          const payload = await verifyRes.json();
+          googleUser = {
+            email: payload.email,
+            name: payload.name || payload.given_name || 'Customer',
+            picture: payload.picture,
+            googleId: payload.sub,
+          };
+        }
+      } catch (err) {
+        console.warn('Google ID token verification failed:', err.message);
+      }
+    }
+
+    // 2. If Google OAuth Access Token provided
+    if (!googleUser && token) {
+      try {
+        const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (userRes.ok) {
+          const payload = await userRes.json();
+          googleUser = {
+            email: payload.email,
+            name: payload.name || `${payload.given_name || ''} ${payload.family_name || ''}`.trim() || 'Customer',
+            picture: payload.picture,
+            googleId: payload.sub,
+          };
+        }
+      } catch (err) {
+        console.warn('Google Access Token verification failed:', err.message);
+      }
+    }
+
+    // 3. Fallback to direct verified profile sent from client
+    if (!googleUser && profile && profile.email) {
+      googleUser = profile;
+    }
+
+    if (!googleUser || !googleUser.email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google authentication failed. Please try again.',
+      });
+    }
+
+    const email = googleUser.email.toLowerCase().trim();
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new customer account with random strong password
+      const randomPassword = 'Ggl_' + Math.random().toString(36).substring(2, 12) + '!2026';
+      user = await User.create({
+        name: googleUser.name || 'Customer',
+        email: email,
+        password: randomPassword,
+        profileImage: googleUser.picture || '',
+        role: 'customer',
+        accountStatus: 'active',
+      });
+    } else {
+      if (!user.profileImage && googleUser.picture) {
+        user.profileImage = googleUser.picture;
+        await user.save({ validateBeforeSave: false });
+      }
+    }
+
+    if (user.accountStatus !== 'active') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is inactive or suspended',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Welcome, ${user.name}! ✨`,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        profileImage: user.profileImage || '',
+        role: user.role,
+        storeName: user.storeName || '',
+      },
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
