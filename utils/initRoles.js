@@ -15,9 +15,17 @@ export const initDefaultUsers = async () => {
         notes: 'Master Superadmin of the platform',
       });
       console.log('✓ Default SuperAdmin seeded: superadmin@subhlagansarees.com');
-    } else if (superAdminExists.role !== 'superadmin') {
-      superAdminExists.role = 'superadmin';
-      await superAdminExists.save();
+    } else {
+      let needSave = false;
+      if (superAdminExists.role !== 'superadmin') {
+        superAdminExists.role = 'superadmin';
+        needSave = true;
+      }
+      if (superAdminExists.accountStatus !== 'active') {
+        superAdminExists.accountStatus = 'active';
+        needSave = true;
+      }
+      if (needSave) await superAdminExists.save();
     }
 
     // 2. Ensure Admin
@@ -29,10 +37,26 @@ export const initDefaultUsers = async () => {
         phone: '+91 98765 00000',
         password: 'admin123',
         role: 'admin',
+        storeName: 'Subh Lagan Sarees',
         accountStatus: 'active',
         notes: 'Platform Administrator',
       });
       console.log('✓ Default Admin seeded: admin@subhlagansarees.com');
+    } else {
+      let needSave = false;
+      if (adminExists.role !== 'admin') {
+        adminExists.role = 'admin';
+        needSave = true;
+      }
+      if (adminExists.accountStatus !== 'active') {
+        adminExists.accountStatus = 'active';
+        needSave = true;
+      }
+      if (!adminExists.storeName) {
+        adminExists.storeName = 'Subh Lagan Sarees';
+        needSave = true;
+      }
+      if (needSave) await adminExists.save();
     }
 
     // 3. Ensure Client
@@ -50,6 +74,17 @@ export const initDefaultUsers = async () => {
         notes: 'Primary Client Store',
       });
       console.log('✓ Default Client seeded: client@subhlagansarees.com');
+    } else {
+      let needSave = false;
+      if (clientExists.role !== 'client') {
+        clientExists.role = 'client';
+        needSave = true;
+      }
+      if (clientExists.accountStatus !== 'active') {
+        clientExists.accountStatus = 'active';
+        needSave = true;
+      }
+      if (needSave) await clientExists.save();
     }
   } catch (err) {
     console.error('Warning in initDefaultUsers:', err.message);
