@@ -45,7 +45,7 @@ export const toggleWishlist = async (req, res, next) => {
     }
 
     const existsIndex = wishlist.products.findIndex(
-      (id) => id.toString() === productId
+      (id) => (id?._id ? id._id.toString() : id?.toString()) === String(productId)
     );
 
     let isAdded = false;
@@ -85,7 +85,7 @@ export const removeFromWishlist = async (req, res, next) => {
 
     if (wishlist) {
       wishlist.products = wishlist.products.filter(
-        (id) => id.toString() !== productId
+        (id) => (id?._id ? id._id.toString() : id?.toString()) !== String(productId)
       );
       await wishlist.save();
     }

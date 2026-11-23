@@ -1,17 +1,27 @@
 import Cart from '../models/Cart.js';
 import Product from '../models/Product.js';
 
+// Safe ID string extractor helper
+const getIdString = (val) => {
+  if (!val) return '';
+  if (typeof val === 'string') return val.trim();
+  if (val._id) return val._id.toString();
+  if (typeof val.toString === 'function') return val.toString();
+  return String(val);
+};
+
 // Helper to format cart response
 const formatCartResponse = (cart) => {
   if (!cart) return { items: [], subtotal: 0, totalQuantity: 0 };
   let subtotal = 0;
   let totalQuantity = 0;
 
-  const validItems = cart.items.filter(item => item.product != null);
+  const validItems = (cart.items || []).filter(item => item && item.product != null);
   validItems.forEach(item => {
-    const price = item.product.discountPrice || item.product.price;
-    subtotal += price * item.quantity;
-    totalQuantity += item.quantity;
+    const price = item.product.discountPrice || item.product.price || 0;
+    const qty = Number(item.quantity) || 1;
+    subtotal += price * qty;
+    totalQuantity += qty;
   });
 
   return {
@@ -51,9 +61,14 @@ export const getCart = async (req, res, next) => {
 export const addToCart = async (req, res, next) => {
   try {
     const { productId, quantity = 1 } = req.body;
-    const qty = Math.max(1, parseInt(quantity, 10));
+    const cleanProductId = getIdString(productId);
+    const qty = Math.max(1, parseInt(quantity, 10) || 1);
 
-    const product = await Product.findById(productId);
+    if (!cleanProductId) {
+      return res.status(400).json({ success: false, message: 'Please provide valid productId' });
+    }
+
+    const product = await Product.findById(cleanProductId);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -63,14 +78,17 @@ export const addToCart = async (req, res, next) => {
       cart = new Cart({ user: req.user._id, items: [] });
     }
 
+    // Clean up any corrupt items
+    cart.items = (cart.items || []).filter(item => item && item.product != null);
+
     const itemIndex = cart.items.findIndex(
-      (item) => item.product.toString() === productId
+      (item) => getIdString(item.product) === cleanProductId
     );
 
     if (itemIndex > -1) {
       cart.items[itemIndex].quantity += qty;
     } else {
-      cart.items.push({ product: productId, quantity: qty });
+      cart.items.push({ product: cleanProductId, quantity: qty });
     }
 
     await cart.save();
@@ -95,7 +113,7 @@ export const addToCart = async (req, res, next) => {
 // @access  Private
 export const updateCartItem = async (req, res, next) => {
   try {
-    const { productId } = req.params;
+    const cleanProductId = getIdString(req.params.productId);
     const { quantity } = req.body;
     const qty = parseInt(quantity, 10);
 
@@ -104,8 +122,10 @@ export const updateCartItem = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Cart not found' });
     }
 
+    cart.items = (cart.items || []).filter(item => item && item.product != null);
+
     const itemIndex = cart.items.findIndex(
-      (item) => item.product.toString() === productId
+      (item) => getIdString(item.product) === cleanProductId
     );
 
     if (itemIndex === -1) {
@@ -140,14 +160,14 @@ export const updateCartItem = async (req, res, next) => {
 // @access  Private
 export const removeFromCart = async (req, res, next) => {
   try {
-    const { productId } = req.params;
+    const cleanProductId = getIdString(req.params.productId);
     let cart = await Cart.findOne({ user: req.user._id });
     if (!cart) {
       return res.status(404).json({ success: false, message: 'Cart not found' });
     }
 
-    cart.items = cart.items.filter(
-      (item) => item.product.toString() !== productId
+    cart.items = (cart.items || []).filter(
+      (item) => item && item.product != null && getIdString(item.product) !== cleanProductId
     );
 
     await cart.save();
@@ -189,17 +209,30 @@ export const syncGuestCart = async (req, res, next) => {
       cart = new Cart({ user: req.user._id, items: [] });
     }
 
+    // Filter out any corrupt null product items currently in cart
+    cart.items = (cart.items || []).filter(item => item && item.product != null);
+
     for (const item of guestItems) {
-      if (!item.productId) continue;
+      if (!item) continue;
+      const targetId = getIdString(item.productId || item.product || item._id);
+      if (!targetId) continue;
+
+      const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+
+      // Verify product exists in DB before adding
+      const productExists = await Product.findById(targetId);
+      if (!productExists) continue;
+
       const index = cart.items.findIndex(
-        (ci) => ci.product.toString() === item.productId
+        (ci) => getIdString(ci.product) === targetId
       );
+
       if (index > -1) {
-        cart.items[index].quantity += (item.quantity || 1);
+        cart.items[index].quantity += qty;
       } else {
         cart.items.push({
-          product: item.productId,
-          quantity: item.quantity || 1,
+          product: targetId,
+          quantity: qty,
         });
       }
     }
@@ -240,4 +273,5 @@ export const clearCart = async (req, res, next) => {
     next(error);
   }
 };
+
 
