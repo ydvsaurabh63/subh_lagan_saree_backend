@@ -17,8 +17,8 @@ export const getSuperAdminStats = async (req, res, next) => {
     const totalAdmins = await User.countDocuments({ role: 'admin' });
     const activeAdmins = await User.countDocuments({ role: 'admin', accountStatus: 'active' });
 
-    const totalClients = await User.countDocuments({ role: { $in: ['client', 'admin'] } });
-    const activeClients = await User.countDocuments({ role: { $in: ['client', 'admin'] }, accountStatus: 'active' });
+    const totalClients = await User.countDocuments({ role: 'client' });
+    const activeClients = await User.countDocuments({ role: 'client', accountStatus: 'active' });
 
     const totalCustomers = await User.countDocuments({ role: 'customer' });
     const totalOrders = await Order.countDocuments();
@@ -37,7 +37,7 @@ export const getSuperAdminStats = async (req, res, next) => {
       .sort({ createdAt: -1 })
       .limit(5);
 
-    const recentClients = await User.find({ role: { $in: ['client', 'admin'] } })
+    const recentClients = await User.find({ role: 'client' })
       .select('-password')
       .populate('assignedAdmin', 'name email')
       .sort({ createdAt: -1 })
@@ -70,14 +70,14 @@ export const getAdminPortalStats = async (req, res, next) => {
   try {
     const isAdmin = req.user.role === 'admin';
     const filter = isAdmin
-      ? { role: { $in: ['client', 'admin'] }, assignedAdmin: req.user._id }
-      : { role: { $in: ['client', 'admin'] } };
+      ? { role: 'client', assignedAdmin: req.user._id }
+      : { role: 'client' };
 
     // If no clients assigned directly to this admin, count all clients
     let assignedClientsCount = await User.countDocuments(filter);
     let clientsFilter = filter;
     if (isAdmin && assignedClientsCount === 0) {
-      clientsFilter = { role: { $in: ['client', 'admin'] } };
+      clientsFilter = { role: 'client' };
       assignedClientsCount = await User.countDocuments(clientsFilter);
     }
 
@@ -293,7 +293,7 @@ export const getClients = async (req, res, next) => {
   try {
     const { search = '', status = '', assignedAdmin = '', page = 1, limit = 50 } = req.query;
 
-    const query = { role: { $in: ['client', 'admin'] } };
+    const query = { role: 'client' };
 
     // If caller is Admin (not Superadmin) and has specific assigned clients
     if (req.user.role === 'admin') {

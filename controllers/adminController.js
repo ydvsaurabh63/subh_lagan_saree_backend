@@ -15,16 +15,43 @@ export const getAdminStats = async (req, res, next) => {
     let productFilter = {};
     let contactFilter = {};
 
+    const subhLaganStoreFilter = {
+      $or: [
+        { storeSlug: 'subh-lagan' },
+        { storeSlug: 'subh-lagan-sarees-flagship' },
+        { storeSlug: 'subh-lagan-sarees' },
+        { storeSlug: { $regex: /^subh-lagan/i } },
+        { storeSlug: null },
+        { storeSlug: { $exists: false } },
+      ],
+    };
+
     if (req.user && (req.user.role === 'client' || (req.user.role === 'admin' && req.user.storeName))) {
-      const userStoreSlug = req.user.storeName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
-      orderFilter.storeSlug = userStoreSlug;
-      productFilter.storeSlug = userStoreSlug;
-      contactFilter.storeSlug = userStoreSlug;
+      const userStoreSlug = (req.user.storeName || '').toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      if (!userStoreSlug || userStoreSlug === 'subh-lagan' || userStoreSlug.includes('subh-lagan')) {
+        orderFilter.$or = subhLaganStoreFilter.$or;
+        productFilter.$or = subhLaganStoreFilter.$or;
+        contactFilter.$or = subhLaganStoreFilter.$or;
+      } else {
+        orderFilter.storeSlug = userStoreSlug;
+        productFilter.storeSlug = userStoreSlug;
+        contactFilter.storeSlug = userStoreSlug;
+      }
     } else if (req.query.store && req.query.store !== 'all') {
       const storeSlug = req.query.store.toLowerCase().trim();
-      orderFilter.storeSlug = storeSlug;
-      productFilter.storeSlug = storeSlug;
-      contactFilter.storeSlug = storeSlug;
+      if (storeSlug === 'subh-lagan' || storeSlug.includes('subh-lagan')) {
+        orderFilter.$or = subhLaganStoreFilter.$or;
+        productFilter.$or = subhLaganStoreFilter.$or;
+        contactFilter.$or = subhLaganStoreFilter.$or;
+      } else {
+        orderFilter.storeSlug = storeSlug;
+        productFilter.storeSlug = storeSlug;
+        contactFilter.storeSlug = storeSlug;
+      }
+    } else {
+      orderFilter.$or = subhLaganStoreFilter.$or;
+      productFilter.$or = subhLaganStoreFilter.$or;
+      contactFilter.$or = subhLaganStoreFilter.$or;
     }
 
     // 1. Order Counts & Revenue
